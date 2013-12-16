@@ -1,0 +1,23 @@
+Name:          my
+Version:       0.1
+Synopsis:      My stuf
+Description:
+    A package containing mpdules I have created.
+Author:        h42
+Maintainer:    h42@???
+Build-Type:    Simple
+Cabal-Version: >= 1.2
+library
+  Exposed-Modules: My.Ftp
+                   My.Glob
+                   My.Hdbm
+                   My.Show
+                   My.Sql
+                   My.Time
+                   My.Utf8
+                   My.Xml
+  c-sources:       My/hdbm.c
+  Build-Depends:   base >= 2.0, network, bytestring, directory, time
+  build-tools: ghc >= 7.0
+  extra-libraries: sqlite3 gdbm
+  extra-lib-dirs:

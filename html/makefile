@@ -1,0 +1,40 @@
+HSFLAGS =  -fwarn-name-shadowing  #dynamic
+DFLAGS = -dynamic
+SFLAGS = -static -optl-pthread -optl-static
+OBJS=Html_base.o Html.o Html_def.o Cgi.o
+
+
+PROGS=jpd genx html mkthumb form # color
+
+.PHONY: ALL
+
+ALL:$(PROGS)
+
+mime:mime.cc
+	g++ -Wall -g mime.cc -omime
+
+genx Html.hs:genx.hs Html0.hs
+	ghc $(HSFLAGS) $(DFLAGS) --make -o genx genx.hs
+	genx > Html.hs
+
+html:html.hs Html.o
+	ghc $(HSFLAGS) $(DFLAGS) --make -o html html.hs
+
+form:form.hs Cgi.hs genx
+	ghc $(HSFLAGS) $(SFLAGS) --make -o form form.hs
+
+Html.o:Html.hs
+	ghc $(HSFLAGS) $(DFLAGS) -c Html.hs -o Html.o
+
+% : %.hs
+	ghc $(HSFLAGS) $(DFLAGS) --make -o $@ $<
+
+HTTPDIR=/srv/http
+install:html
+	install -o jerry -g jerry -m755 html form color $(HTTPDIR)/cgi-bin/
+	install -m 755 -o jerry -g jerry sara.jpg plumber.jpg  $(HTTPDIR)
+	#sudo install -o apache -g apache -m755 html form color /var/www/cgi-bin/
+	#sudo install -m 755 -o apache -g apache sara.jpg plumber.jpg  /var/www/html
+
+clean:
+	-rm -v *.hi *.o $(PROGS) Html.hs
