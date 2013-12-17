@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+import Data.Char
+import Data.List
 import System.Environment
 import qualified Data.ByteString.Char8 as B
 import System.IO
@@ -11,6 +13,8 @@ portnum = 8080
 
 notFound fn=("404 Not Found",
           "The requested URL " ++ fn ++ " was not found on this server.")
+forbidden fn=("403 Forbidden",
+          "The requested URL, file type or operation is not allowed")
 errmsg h msg = B.hPutStr h $ B.pack $ unlines
    ["HTTP/1.1 " ++ fst msg,
     --"Content-Length: 136",
@@ -24,21 +28,42 @@ errmsg h msg = B.hPutStr h $ B.pack $ unlines
     snd msg,
     "</body>","</html>"]
 
+extensions = [("gif", "image/gif" ),
+        ("jpg", "image/jpg" ),
+        ("jpeg","image/jpeg"),
+        ("png", "image/png" ),
+        ("ico", "image/ico" ),
+        ("zip", "image/zip" ),
+        ("gz",  "image/gz"  ),
+        ("tar", "image/tar" ),
+        ("htm", "text/html" ),
+        ("/", "text/html" ),  -- for index.html
+        ("html","text/html" ) ] :: [(String,String)]
+
+getMimeType fn = if null xs then [] else (snd.head) xs  where
+    xs = filter (\x->isSuffixOf (fst x) fn) extensions
+
 getStatic h fn = do
     let fn' = if fn == "/" then "www/index.html" else ("www" ++ fn)
+        m = getMimeType fn
+        bad = isInfixOf ".." fn
     e <- doesFileExist fn'
-    if e then do
+
+    if m==[]  || bad  then errmsg h $ forbidden fn
+    else if not e then errmsg h $ notFound fn'
+    else do
         f <- B.readFile fn'
-        B.hPut h "HTTP/1.1 200 OK\nConnection: close\nContent-Type: text/html\n\n"
+        B.hPut h $ B.pack $ "HTTP/1.1 200 OK\nConnection: close\nContent-Type: "
+                            ++ m ++ "\n\n"
         B.hPut h f
-    else errmsg h $ notFound fn'
 
 serverproc :: Handle -> IO ()
 serverproc h = do
     (rc, buf) <- netGet h 100 2000
+    let ubuf = B.unpack buf
     when (rc>0) $ do
-        if B.isPrefixOf "GET" buf then do
-            case (words $ head $ lines $ B.unpack buf) of
+        if isPrefixOf "GET" (map toUpper ubuf) then do
+            case (words $ head $ lines ubuf) of
                 (_:fn:_) -> do
                     getStatic h fn
                 _  -> return ()
