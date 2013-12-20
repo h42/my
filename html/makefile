@@ -21,7 +21,7 @@ html:html.hs Html.o
 	ghc $(HSFLAGS) $(DFLAGS) --make -o html html.hs
 
 form:form.hs Cgi.hs genx
-	ghc $(HSFLAGS) $(SFLAGS) --make -o form form.hs
+	ghc $(HSFLAGS) $(DFLAGS) --make -o form form.hs
 
 Html.o:Html.hs
 	ghc $(HSFLAGS) $(DFLAGS) -c Html.hs -o Html.o
@@ -29,12 +29,13 @@ Html.o:Html.hs
 % : %.hs
 	ghc $(HSFLAGS) $(DFLAGS) --make -o $@ $<
 
-HTTPDIR=/srv/http
+#HTTPDIR=/srv/http
+HTTPDIR=/www
 install:html
-	install -o jerry -g jerry -m755 html form color $(HTTPDIR)/cgi-bin/
-	install -m 755 -o jerry -g jerry sara.jpg plumber.jpg  $(HTTPDIR)
+	install -o jerry -g jerry -m555 html form color $(HTTPDIR)/
+	install -m 444 -o jerry -g jerry sara.jpg plumber.jpg  $(HTTPDIR)
 	#sudo install -o apache -g apache -m755 html form color /var/www/cgi-bin/
-	#sudo install -m 755 -o apache -g apache sara.jpg plumber.jpg  /var/www/html
+	#sudo install -m 444 -o apache -g apache sara.jpg plumber.jpg  /var/www/html
 
 clean:
 	-rm -v *.hi *.o $(PROGS) Html.hs

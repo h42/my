@@ -11,6 +11,8 @@ PROGS=netc nets demon http
 	ghc $(CLG) -o $@ $<
 
 all:$(PROGS)
+cgi:cgi.cc
+	g++ cgi.cc -o www/cgi-bin/cgi
 
 nets:nets.hs Net.o Net.hi
 netc:netc.hs Net.o Net.hi
