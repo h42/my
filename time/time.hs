@@ -1,4 +1,4 @@
-import MY.Time
+import My.Time
 import Data.Time
 
 main = do

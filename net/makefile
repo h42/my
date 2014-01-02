@@ -1,5 +1,4 @@
-HSFLAGS = -O -fwarn-name-shadowing -i/home/jerry/haskell/lib
-HSFLAGS = -O -fwarn-name-shadowing -i/home/jerry/haskell/lib
+HSFLAGS = -O -fwarn-name-shadowing -i/home/jerry/haskell/my
 CLG = $(HSFLAGS) --make -threaded -rtsopts # -dynamic
 
 PROGS=netc nets demon http
@@ -22,6 +21,9 @@ Net.o Net.hi:Net.hs
 demon:demon.hs Demon.o
 Demon.o:Demon.hs
 	ghc -c $(CLG) -o Demon.o Demon.hs
+
+install:
+	cp -v Net.hs ../cabal/My/
 
 clean:
 	-rm *.hi *.o $(PROGS)

@@ -1,4 +1,4 @@
-module Net (
+module My.Net (
     netGet
     ,netGetf
     ,server

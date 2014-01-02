@@ -1,4 +1,4 @@
-module MY.Time (
+module My.Time (
     utime
     ,ltime
     ,weekDay

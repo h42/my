@@ -2,7 +2,7 @@ import System.Environment
 import qualified Data.ByteString.Char8 as B
 import System.IO
 import Control.Monad
-import Net
+import My.Net
 
 portnum = 4247
 msgmore = B.pack "more"

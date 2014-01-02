@@ -7,6 +7,8 @@ module Paths_my (
 import qualified Control.Exception as Exception
 import Data.Version (Version(..))
 import System.Environment (getEnv)
+import Prelude
+
 catchIO :: IO a -> (Exception.IOException -> IO a) -> IO a
 catchIO = Exception.catch
 
@@ -16,7 +18,7 @@ version = Version {versionBranch = [0,1], versionTags = []}
 bindir, libdir, datadir, libexecdir :: FilePath
 
 bindir     = "/home/jerry/.cabal/bin"
-libdir     = "/home/jerry/.cabal/lib/my-0.1/ghc-7.4.2"
+libdir     = "/home/jerry/.cabal/lib/my-0.1/ghc-7.6.3"
 datadir    = "/home/jerry/.cabal/share/my-0.1"
 libexecdir = "/home/jerry/.cabal/libexec"
 

@@ -1,7 +1,7 @@
 import System.IO
 import System.Timeout
 import Network
-import Net
+import My.Net
 import qualified Data.ByteString.Char8 as BS
 
 pnum=4247

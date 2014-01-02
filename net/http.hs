@@ -2,13 +2,15 @@
 
 import Data.Char
 import Data.List
+import qualified Data.Map as M
 import System.Environment
 import qualified Data.ByteString.Char8 as B
 import System.IO
 import System.Directory
 import System.Process
 import Control.Monad
-import Net
+import My.Net
+import My.Time
 
 portnum = 8080
 root = "/www"
@@ -59,10 +61,9 @@ getStatic h fn = do
          "HTTP/1.1 200 OK\nConnection: close\nContent-Type: " ++ m ++ "\n\n"
         B.hPut h f
 
-getCgi h fn lbuf = do
+getCgi h fn llbuf = do
     let bad = isInfixOf ".." fn
     e <- doesFileExist $ root ++ fn
-
     if bad  then errmsg h $ forbidden fn
     else if not e then errmsg h $ notFound fn
     else do
@@ -75,28 +76,41 @@ getCgi h fn lbuf = do
         return ()
     return ()
 
+process_hdr buf = m where
+    m' = M.empty
+    m=m'
+
 serverproc :: Handle -> IO ()
 serverproc h = do
-    putStrLn " "
     (rc, buf) <- netGet h 4200 2000
-    let lbuf = lines $ B.unpack buf
+    let ubuf = B.unpack buf
+        lbuf = lines ubuf
+
+    putStrLn ""
     mapM putStrLn lbuf
-    when (rc>0) $ do
-        if isPrefixOf "GET" (map toUpper $ head lbuf) then do
-            case (words $ head $ lbuf) of
-                (_:fn:_) -> do
-                    perms <- getPermissions (root++fn)
-                    print fn
-                    if (executable perms) then getCgi h fn lbuf
-                    else getStatic h fn
-                _  -> return ()
-        else if isPrefixOf "POST" (map toUpper $ head lbuf) then do
-            case (words $ head $ lbuf) of
-                (_:fn:_) -> do
-                    perms <- getPermissions (root++fn)
-                    print fn
-                    if (executable perms) then getCgi h fn lbuf
-                    else getStatic h fn
-        else errmsg h $ forbidden ""
+    print $ take 3 $ words ubuf
+
+    case (words ubuf) of
+        (op:ifn:_) -> do
+            let (fn,qstr) = span (/= '$') ifn
+                bad = isInfixOf ".." fn
+            --print (op,ifn,fn,qstr)
+            e <- doesFileExist $ root ++ fn
+            perms <- getPermissions (root++fn)
+
+            if bad  then errmsg h $ forbidden fn
+            else if not e then errmsg h $ notFound fn
+            else if isPrefixOf "GET" (map toUpper op) then do
+                if (executable perms) then getCgi h fn lbuf
+                else getStatic h fn
+            else if isPrefixOf "POST" (map toUpper op) then do
+                if (executable perms) then getCgi h fn lbuf
+                else getStatic h fn
+            else return ()
+        _ -> return ()
+
+getContent buf = if B.length s11 < B.length s21  then s12  else s22  where
+    (s11,s12) = B.breakSubstring "\r\n\r\n" buf
+    (s21,s22) = B.breakSubstring "\n\n" buf
 
 main = server portnum serverproc

@@ -1,19 +1,24 @@
-HSFLAGS =  -fwarn-name-shadowing  #dynamic
-DFLAGS = -dynamic
-SFLAGS = -static -optl-static -optl-pthread
+HSFLAGS = -O -fwarn-name-shadowing
+CLG = $(HSFLAGS) --make -dynamic # -threaded -rtsopts # -dynamic
 
-
-PROGS=jpd par passwd
-
-.PHONY: ALL
-
-ALL:$(PROGS)
-
-jpd:jpd.hs
-	ghc $(HSFLAGS) $(DFLAGS) --make -o jpd jpd.hs
+#%.o : %.hs
+#        ghc -c $(HSFLAGS) -o $@ $<
 
 % : %.hs
-	ghc $(HSFLAGS) $(DFLAGS) --make -o $@ $<
+	ghc $(CLG) -o $@ $<
+
+MODULE=Parse
+TESTPROG=
+PROGS=jpd
+
+all:$(PROGS)
+
+jpd:$(MODULE).hs jpd.hs
+#jpd:jpd.hs
+
+install:
+	cp -v $(MODULE).hs ../cabal/My/
+	#cp -v jpd.hs ../cabal/tests/$(TESTPROG).hs
 
 clean:
-	-rm -v *.hi *.o $(PROGS)
+	-rm *.hi *.o $(PROGS)
