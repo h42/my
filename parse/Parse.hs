@@ -3,7 +3,10 @@ module Parse (
    ,anyChar
    ,char
    ,count
+   ,digit
    ,eol
+   ,many
+   ,many1
    ,toEol
    ,space
    ,spaces
@@ -46,14 +49,47 @@ anyChar = Parse $ \st -> case st of
     (x:xs) -> Right (x,xs)
     []     -> Left "anyChar: EOS"
 
+digit :: Parse String Char
+digit = Parse $ \st ->
+        case st of
+            (x:xs) -> if isDigit x then Right (x, xs)
+                      else Left "digit not found"
+            []     -> Left "space: EOS"
+
+--
+-- MANY
+--
+many :: Parse String a -> Parse String [a]
+many p = Parse $ \st -> many' p [] st
+many' p as [] = Right (as,[])
+many' p as st = case (runParse p st) of
+        Left ls -> Right (as,st)
+        Right (x,st') -> many' p (x:as) st'
+
+many1 :: Parse String a -> Parse String [a]
+many1 p = Parse $ \st -> many1' p [] st
+many1' p [] [] = Left "many1: no takers"
+many1' p as [] = Right (as,[])
+many1' p as st = case (runParse p st) of
+        Left ls -> if null as then Left ("many1: " ++ ls)
+                   else Right (as, st)
+        Right (x,st') -> many1' p (x:as) st'
+
+--
+--  SPACE
+--
 space :: Parse String Bool
 space = Parse $ \st -> case st of
-            (x:xs) -> Right $ (isSpace x, (x:xs))
+            (x:xs) -> Right $ (mySpace x, (x:xs))
             []     -> Left "space: EOS"
 
 spaces :: Parse String ()
-spaces = Parse $ \xs -> Right ((), dropWhile isSpace xs)
+spaces = Parse $ \xs -> Right ((), dropWhile mySpace xs)
 
+mySpace x = x==' ' || x=='\t'
+--
+-- STRING
+--
 string :: String -> Parse String String
 string s = Parse $ \xs ->
     let ok = isPrefixOf s xs
