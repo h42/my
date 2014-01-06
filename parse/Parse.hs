@@ -7,6 +7,9 @@ module Parse (
    ,eol
    ,many
    ,many1
+   ,noneOf
+   ,oneIf
+   ,oneOf
    ,toEol
    ,space
    ,spaces
@@ -17,8 +20,6 @@ module Parse (
 
 import Data.Char
 import Data.List (isPrefixOf)
-import Control.Monad.State
-import Debug.Trace
 
 newtype Parse s a = Parse { runParse :: s -> Either String (a,s) }
 
@@ -32,11 +33,24 @@ instance Monad (Parse st) where
                     Right (a, newParse) -> runParse (f a) newParse
 
 infixl 3 <|>
-
 (Parse h) <|> f = Parse newf where
     newf st = case (h st) of
                 Left _ -> runParse (f  ) st
                 Right (a, newParse) -> Right (a, newParse)
+
+instance Functor (Parse a) where
+    fmap f p  = Parse $ \st -> do
+        case (runParse p st) of
+            Left s -> Left s
+            Right (y, ys) -> Right (f y, ys)
+
+{-
+fmapx :: (a -> b) -> Parse String a -> Parse String b
+fmapx f p = Parse $ \st -> do
+    case (runParse p st) of
+        Left s -> Left s
+        Right (y, ys) -> Right (f y, ys)
+-}
 
 char :: Char -> Parse String Char
 char c = Parse $ \st -> case st of
@@ -61,19 +75,37 @@ digit = Parse $ \st ->
 --
 many :: Parse String a -> Parse String [a]
 many p = Parse $ \st -> many' p [] st
-many' p as [] = Right (as,[])
+many' p as [] = Right (reverse as,[])
 many' p as st = case (runParse p st) of
-        Left ls -> Right (as,st)
+        Left ls -> Right (reverse as,st)
         Right (x,st') -> many' p (x:as) st'
 
 many1 :: Parse String a -> Parse String [a]
 many1 p = Parse $ \st -> many1' p [] st
 many1' p [] [] = Left "many1: no takers"
-many1' p as [] = Right (as,[])
+many1' p as [] = Right (reverse as,[])
 many1' p as st = case (runParse p st) of
         Left ls -> if null as then Left ("many1: " ++ ls)
-                   else Right (as, st)
+                   else Right (reverse as, st)
         Right (x,st') -> many1' p (x:as) st'
+
+noneOf :: String -> Parse String Char
+noneOf s = Parse $ \st -> case st of
+    (x:xs) -> if x `notElem` s then Right (x,xs)
+              else Left $ "noneOf: In set"
+    []     -> Left "noneOf: EOS"
+
+oneIf :: (Char -> Bool) -> Parse String Char
+oneIf f = Parse $ \st -> case st of
+    (x:xs) -> if f x then Right (x,xs)
+              else Left $ "oneIf: Not found"
+    []     -> Left "oneOf: EOS"
+
+oneOf :: String -> Parse String Char
+oneOf s = Parse $ \st -> case st of
+    (x:xs) -> if x `elem` s then Right (x,xs)
+              else Left $ "oneOf: Not in set"
+    []     -> Left "oneOf: EOS"
 
 --
 --  SPACE
