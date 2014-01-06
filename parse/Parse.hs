@@ -1,4 +1,4 @@
-module Parse (
+module My.Parse (
     Parse(..)
    ,anyChar
    ,char

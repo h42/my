@@ -1,4 +1,4 @@
-import Parse
+import My.Parse
 import Data.Char
 import Data.Word
 

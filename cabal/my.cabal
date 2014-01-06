@@ -11,6 +11,7 @@ library
   Exposed-Modules: My.Ftp
                    My.Glob
                    My.Hdbm
+                   My.Parse
                    My.Show
                    My.Sql
                    My.Time
