@@ -10,7 +10,9 @@ module My.Parse (
    ,noneOf
    ,oneIf
    ,oneOf
-   ,toEol
+   ,onLeft
+   ,toEod
+   ,toEol  -- line
    ,space
    ,spaces
    ,string
@@ -43,14 +45,6 @@ instance Functor (Parse a) where
         case (runParse p st) of
             Left s -> Left s
             Right (y, ys) -> Right (f y, ys)
-
-{-
-fmapx :: (a -> b) -> Parse String a -> Parse String b
-fmapx f p = Parse $ \st -> do
-    case (runParse p st) of
-        Left s -> Left s
-        Right (y, ys) -> Right (f y, ys)
--}
 
 char :: Char -> Parse String Char
 char c = Parse $ \st -> case st of
@@ -107,6 +101,10 @@ oneOf s = Parse $ \st -> case st of
               else Left $ "oneOf: Not in set"
     []     -> Left "oneOf: EOS"
 
+onLeft :: a -> Parse String a -> Parse String a
+onLeft a p = Parse $ \st -> case (runParse p st) of
+        Right (x,st') -> Right (x,st')
+        Left _ -> Right (a,st)
 --
 --  SPACE
 --
@@ -144,7 +142,13 @@ eol = Parse $ \st -> case st of
     ('\n':xs)      ->  Right ((), xs)
     ('\r':'\n':xs) ->  Right ((), xs)
     ('\r':xs)      ->  Right ((), xs)
-    _              ->  Left ("eol: Bad match")
+    _              ->  Left ("eol: Bad match " ++ st )
+
+toEod :: Parse String String
+toEod = Parse $ \st ->
+    case st of
+        xxs@(x:xs) -> Right (xxs,xxs)
+        _          -> Left "toEod: Already at eod"
 
 toEol :: Parse String String
 toEol = Parse $ \st ->

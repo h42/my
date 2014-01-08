@@ -4,7 +4,23 @@ import Data.Word
 
 data IP = IP Word8 Word8 Word8 Word8 deriving Show
 
-parserIP = do
+parseIP :: IO ()
+parseIP = do
+    let p = runParse parseIP1 "1.1.1.2\n2.3.3.4\n\nuser data"
+    print p
+
+parseIP1 = do
+    ips <- many1 parseIP2
+    u <- parseIP3
+    return (ips,u)
+
+parseIP3 = do
+    eol
+    u <- many anyChar
+    return u
+
+parseIP2 :: Parse String (IP)
+parseIP2 = do
     d1 <- fmap  read (many1 digit)
     char '.'
     d2 <- fmap  read (many1 digit)
@@ -13,7 +29,7 @@ parserIP = do
     char '.'
     d4 <- fmap  read (many1 digit)
     toEol
-    return $ IP d1 d2 d3 d4
+    return $ (IP d1 d2 d3 d4)
 
 doit = do
     a <- word
@@ -32,7 +48,8 @@ doit2 = do
     return ()
 
 main = do
-    print $ runParse (many1 parserIP) "1.1.1.2\n2.3.3.2"
+    parseIP
+
     {-
     print $ runParse (many1 digit) "123 456 def"
     print $ runParse (many $ oneIf (isDigit)) "1234 asdf"

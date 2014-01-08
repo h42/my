@@ -29,8 +29,8 @@ Html.o:Html.hs
 % : %.hs
 	ghc $(HSFLAGS) $(DFLAGS) --make -o $@ $<
 
-#HTTPDIR=/srv/http
-HTTPDIR=/www
+HTTPDIR=/srv/http/cgi-bin
+#HTTPDIR=/www
 install:html
 	install -o jerry -g jerry -m555 html form color $(HTTPDIR)/
 	install -m 444 -o jerry -g jerry sara.jpg plumber.jpg  $(HTTPDIR)

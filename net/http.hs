@@ -11,6 +11,7 @@ import System.Process
 import Control.Monad
 import My.Net
 import My.Time
+import My.Parse
 
 portnum = 8080
 root = "/www"
@@ -76,14 +77,39 @@ getCgi h fn llbuf = do
         return ()
     return ()
 
-process_hdr buf = m where
-    m' = M.empty
-    m=m'
+parseInput ubuf = do
+    let prc = runParse parseInput2 ubuf
+    print prc
+
+parseInput2 = do
+    (w1,w2,w3) <- getHdr
+    hs <- many1 httpData
+    return (w1,w2,w3,hs)
+
+httpData = do
+    d1 <- many1 (noneOf ":")
+    string ": "
+    d2 <- toEol
+    return (d1,d2)
+
+getHdr  = do
+    w1 <- word
+    spaces
+    w2 <- word
+    spaces
+    w3 <- word
+    eol
+    return (w1,w2,w3)
+
 
 serverproc :: Handle -> IO ()
 serverproc h = do
     (rc, buf) <- netGet h 4200 2000
     let ubuf = B.unpack buf
+    prc <- parseInput ubuf
+    return ()
+
+{-
         lbuf = lines ubuf
 
     putStrLn ""
@@ -112,5 +138,6 @@ serverproc h = do
 getContent buf = if B.length s11 < B.length s21  then s12  else s22  where
     (s11,s12) = B.breakSubstring "\r\n\r\n" buf
     (s21,s22) = B.breakSubstring "\n\n" buf
+-}
 
 main = server portnum serverproc

@@ -1,11 +1,15 @@
 import Html
 import Prelude hiding(id,div,span)
+import System.Environment
+import Debug.Trace
 
 --
 -- MAIN
 --
 main = do
-    putStrLn $ render (def "test" yyy)
+    e <- fmap (\z -> map (\(x,y) -> x ++ ": " ++ y ) z) getEnvironment
+
+    putStrLn $ render (def "test" (yyy e))
     {-
     let Stack xs y = (evalState yyy (Stack [] 0))
     mapM print xs
@@ -18,8 +22,11 @@ def mytitle mybody  = do
 	h_head $ h_title $ str mytitle
 	body $ mybody
 
-yyy = do
+yyy e = do
     div' [id "h1div"] $ h1 "HCGI Demo Program"
+
+    mapM (\x -> str x >> br) e
+
     toc
 
     ulist ["one","two","three"]
