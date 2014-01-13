@@ -4,6 +4,7 @@ import Data.Char
 import Data.List
 import qualified Data.Map as M
 import System.Environment
+import System.IO.Error
 import qualified Data.ByteString.Char8 as B
 import System.IO
 import System.Directory
@@ -42,6 +43,9 @@ extensions = [("gif", "image/gif" ),
         ("/", "text/html" ),  -- for index.html
         ("html","text/html" ) ] :: [(String,String)]
 
+--
+-- GET STATIC
+--
 getMimeType fn = if null xs then [] else (snd.head) xs  where
     xs = filter (\x->isSuffixOf (fst x) fn) extensions
 
@@ -54,14 +58,43 @@ getStatic h fn = do
          "HTTP/1.1 200 OK\nConnection: close\nContent-Type: " ++ m ++ "\n\n"
         B.hPut h f
 
-getCgi h fn = do
-    (fd0,fd1,fd2,pid) <- runInteractiveProcess fn [] Nothing Nothing
-    --mapM hClose [fd0,fd2]
+--
+-- GET/POST CGI
+--
+getCgi h fn op qstr hs ds = do
+    print op
+    mapM_ print hs
+    (fd0,fd1,fd2,pid) <- runInteractiveProcess fn [] Nothing e
     d <- B.hGetContents fd1
     B.hPut h (B.append "HTTP/1.1 200 OK\nConnection: close\n" d)
     waitForProcess pid
-    --B.putStr (B.append "HTTP/1.1 200 OK\nConnection: close\n" d)
     return ()
+  where
+    -- ("Referer","http://localhost:8080/
+    qs = if null qstr then
+             case lookup "Referer" hs of
+             Just q -> ("QUERY_STRING", if null q then ""
+                                        else tail $ dropWhile (/='?') q)
+             Nothing -> ("","")
+         else ("QUERY_STRING", tail qstr)
+    e = Just $ filter (/=("",""))
+            [("REQUEST_METHOD","GET") ,qs ]
+
+postCgi h fn op qstr hs ds = do
+    print op
+    --mapM_ print hs
+    (fd0,fd1,fd2,pid) <- runInteractiveProcess fn [] Nothing e
+    hPutStr fd0 ds  >>  hFlush fd0
+    d <- B.hGetContents fd1
+    B.hPut h (B.append "HTTP/1.1 200 OK\nConnection: close\n" d)
+    waitForProcess pid
+    return ()
+  where
+    ml = case lookup "Content-Length" hs of
+                 Just l -> ("CONTENT-lENGTH",l)
+                 Nothing -> ("","")
+    e = Just $ filter (/=("","")) [("REQUEST_METHOD","POST"), ml]
+
 --
 -- Parse Input
 --
@@ -101,20 +134,22 @@ serverproc root h = do
     pdata <- parseInput ubuf
     case pdata of
         Left err -> print err
-        Right ((iop,ifn,iver,ihs,i_ds), i_st) -> do
-            let (fn',qstr) = span (/= '$') ifn
+        Right ((iop,ifn,iver,i_hs,i_ds), i_st) -> do
+            let (fn',qstr) = span (/= '?') ifn
                 bad = isInfixOf ".." fn'
-                fn = if fn' == "/" then root ++ "/index.html" else (root ++ fn')
+                fn = if fn' == "/" then root ++ "/index.html"
+                                   else (root ++ fn')
             e <- doesFileExist $ fn
+            putStrLn $ "fn="++fn
             if bad  then errmsg h $ forbidden fn
             else if not e then print "NOTFOUND" >> (errmsg h $ notFound fn)
             else do
                 perms <- getPermissions (fn)
                 if isPrefixOf "GET" (map toUpper iop) then do
-                    if (executable perms) then getCgi h fn
+                    if (executable perms) then getCgi h fn iop qstr i_hs i_ds
                     else getStatic h fn
                 else if isPrefixOf "POST" (map toUpper iop) then do
-                    if (executable perms) then getCgi h fn
+                    if (executable perms) then postCgi h fn iop qstr i_hs i_ds
                     else getStatic h fn
                 else errmsg h $ forbidden ("command " ++ iop ++ " not implemented")
     return ()

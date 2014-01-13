@@ -38,7 +38,7 @@ myhtml2 s = do
 myhtml cgi = do
     h1' ["style=color:#008"] $ "Html Form  Test Program"
     p $ do
-	form' [method "post", action "form"] $ do
+        form' [method "query", action "form"] $ do
 	    input_hidden [name "hidden", value "HIDDEN STUF"]
 	    br
 	    input_submit [name "sub1", value "sub"]
