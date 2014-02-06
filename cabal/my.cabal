@@ -12,13 +12,15 @@ library
                    My.Glob
                    My.Hdbm
                    My.Parse
+                   My.Rand
                    My.Show
                    My.Sql
                    My.Time
                    My.Utf8
                    My.Xml
   c-sources:       My/hdbm.c
-  Build-Depends:   base >= 2.0, network, bytestring, directory, time
+  Build-Depends:   base >= 2.0, network, bytestring, directory, time,
+                                random
   build-tools: ghc >= 7.0
   extra-libraries: sqlite3 gdbm
   extra-lib-dirs:
