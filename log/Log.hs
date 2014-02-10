@@ -31,11 +31,13 @@ closeLog m = do
     putMVar m l
 
 writeLog :: MVar Log -> String -> IO ()
-writeLog m s = do
-    l <- takeMVar m
-    hPutStrLn (zh l) s
+writeLog mvar str = do
+    (yr,mon,day,hr,minute,sec,_) <- ltime
+    let s' = show (yr,mon,day,hr,minute,sec) ++ " " ++ str
+    l <- takeMVar mvar
+    hPutStrLn (zh l) s'
     hFlush (zh l)
-    putMVar m $ l{zlines=zlines l+1}
+    putMVar mvar $ l{zlines=zlines l+1}
 
 {-
 main = do
