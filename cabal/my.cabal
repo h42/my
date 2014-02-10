@@ -11,6 +11,7 @@ library
   Exposed-Modules: My.Ftp
                    My.Glob
                    My.Hdbm
+                   My.Log
                    My.Parse
                    My.Rand
                    My.Show

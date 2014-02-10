@@ -11,7 +11,7 @@ import System.Directory
 import System.Process
 import Control.Monad
 import My.Net
-import My.Time
+import My.Log
 import My.Parse
 
 notFound fn=("404 Not Found",
@@ -62,8 +62,6 @@ getStatic h fn = do
 -- GET/POST CGI
 --
 getCgi h fn op qstr hs ds = do
-    print op
-    mapM_ print hs
     (fd0,fd1,fd2,pid) <- runInteractiveProcess fn [] Nothing e
     d <- B.hGetContents fd1
     B.hPut h (B.append "HTTP/1.1 200 OK\nConnection: close\n" d)
@@ -81,8 +79,6 @@ getCgi h fn op qstr hs ds = do
             [("REQUEST_METHOD","GET") ,qs ]
 
 postCgi h fn op qstr hs ds = do
-    print op
-    --mapM_ print hs
     (fd0,fd1,fd2,pid) <- runInteractiveProcess fn [] Nothing e
     hPutStr fd0 ds  >>  hFlush fd0
     d <- B.hGetContents fd1
@@ -127,24 +123,30 @@ getHdr  = do
 --
 -- SERVERPROC
 --
-serverproc :: String -> Handle -> IO ()
-serverproc root h = do
+serverproc :: String -> MVar Log -> Handle -> IO ()
+serverproc root mylog h = do
     (rc, buf) <- netGet h 4200 2000
     let ubuf = B.unpack buf
     pdata <- parseInput ubuf
     case pdata of
-        Left err -> print err
+        Left err -> do
+            writeLog mylog $ err
         Right ((iop,ifn,iver,i_hs,i_ds), i_st) -> do
             let (fn',qstr) = span (/= '?') ifn
                 bad = isInfixOf ".." fn'
                 fn = if fn' == "/" then root ++ "/index.html"
                                    else (root ++ fn')
             e <- doesFileExist $ fn
-            putStrLn $ "fn="++fn
-            if bad  then errmsg h $ forbidden fn
-            else if not e then print "NOTFOUND" >> (errmsg h $ notFound fn)
+            if bad  then do
+                writeLog mylog $ "Forbidden input"
+                errmsg h $ forbidden fn
+            else if not e then do
+                writeLog mylog $ "Not found - " ++ fn
+                errmsg h $ notFound fn
             else do
                 perms <- getPermissions (fn)
+                writeLog mylog $ iop ++ " " ++
+                    if executable perms then "CGI " else "STATIC "  ++  fn
                 if isPrefixOf "GET" (map toUpper iop) then do
                     if (executable perms) then getCgi h fn iop qstr i_hs i_ds
                     else getStatic h fn
@@ -155,6 +157,12 @@ serverproc root h = do
     return ()
 
 main = do
-    let portnum = 8080
-        root = "/www"
-    server portnum (serverproc root)
+    rc <- tryIOError (openLog "temp.log")
+    case rc of
+        Left e -> putStrLn $ show e
+        Right mylog -> do
+            let portnum = 8080
+                root = "/www"
+            writeLog mylog "Starting Server"
+            server portnum (serverproc root mylog)
+            writeLog mylog "Shuting down"

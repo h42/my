@@ -1,5 +1,6 @@
 module My.Log (
     Log (..)
+    ,MVar
     ,openLog
     ,writeLog
     ,closeLog
