@@ -18,8 +18,8 @@ version = Version {versionBranch = [0,1], versionTags = []}
 bindir, libdir, datadir, libexecdir :: FilePath
 
 bindir     = "/home/jerry/.cabal/bin"
-libdir     = "/home/jerry/.cabal/lib/my-0.1/ghc-7.6.3"
-datadir    = "/home/jerry/.cabal/share/my-0.1"
+libdir     = "/home/jerry/.cabal/lib/x86_64-linux-ghc-7.6.3/my-0.1"
+datadir    = "/home/jerry/.cabal/share/x86_64-linux-ghc-7.6.3/my-0.1"
 libexecdir = "/home/jerry/.cabal/libexec"
 
 getBinDir, getLibDir, getDataDir, getLibexecDir :: IO FilePath

@@ -5,7 +5,7 @@ import Control.Concurrent
 import Control.Exception
 import Control.Monad
 import Data.Char
-import Demon
+import My.Demon
 
 mydemon = do
     bracket (openFile "xxx" WriteMode)  hClose $ \h ->

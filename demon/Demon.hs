@@ -1,4 +1,5 @@
-module Demon (
+{-# LANGUAGE DoAndIfThenElse  #-}
+module My.Demon (
     demonize
     ,killDemon
 ) where

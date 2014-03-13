@@ -4,7 +4,7 @@ SFLAGS = -static -optl-pthread -optl-static
 OBJS=Html_base.o Html.o Html_def.o Cgi.o
 
 
-PROGS=jpd genx html mkthumb form # color
+PROGS=genx color # jpd genx html mkthumb form
 
 .PHONY: ALL
 
@@ -14,17 +14,20 @@ mime:mime.cc
 	g++ -Wall -g mime.cc -omime
 
 genx Html.hs:genx.hs Html0.hs
-	ghc $(HSFLAGS) $(DFLAGS) --make -o genx genx.hs
+	ghc $(HSFLAGS) $(SFLAGS) --make -o genx genx.hs
 	genx > Html.hs
 
 html:html.hs Html.o
-	ghc $(HSFLAGS) $(DFLAGS) --make -o html html.hs
+	ghc $(HSFLAGS) $(SFLAGS) --make -o html html.hs
 
 form:form.hs Cgi.hs genx
 	ghc $(HSFLAGS) $(DFLAGS) --make -o form form.hs
 
+color:color.hs
+	ghc $(HSFLAGS) $(SFLAGS) --make -o color color.hs
+
 Html.o:Html.hs
-	ghc $(HSFLAGS) $(DFLAGS) -c Html.hs -o Html.o
+	ghc $(HSFLAGS) $(SFLAGS) -c Html.hs -o Html.o
 
 % : %.hs
 	ghc $(HSFLAGS) $(DFLAGS) --make -o $@ $<

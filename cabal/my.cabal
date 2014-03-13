@@ -8,7 +8,8 @@ Maintainer:    h42@???
 Build-Type:    Simple
 Cabal-Version: >= 1.2
 library
-  Exposed-Modules: My.Ftp
+  Exposed-Modules: My.Demon
+                   My.Ftp
                    My.Glob
                    My.Hdbm
                    My.Log
@@ -21,7 +22,7 @@ library
                    My.Xml
   c-sources:       My/hdbm.c
   Build-Depends:   base >= 2.0, network, bytestring, directory, time,
-                                random
+                                random, unix
   build-tools: ghc >= 7.0
   extra-libraries: sqlite3 gdbm
   extra-lib-dirs:

@@ -5,16 +5,20 @@ module My.Net (
     ,client
 ) where
 
-import System.IO
-import System.IO.Error
-import Data.Char
-import Control.Exception
+import Control.Exception (bracket)
 import Control.Concurrent
-import Network
-import System.Posix
-import System.Timeout
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BS
+import Data.Char
+import Data.IORef
+import Network
+import qualified Network.Socket as SK
+import System.IO
+import System.IO.Error
+import System.IO.Unsafe
+--import System.Posix
+import System.Posix.Signals
+import System.Timeout
 
 ----------------------
 -- NETGET
@@ -47,14 +51,23 @@ netGetf2 h n t =  do
 ----------------------
 server :: PortNumber -> (Handle -> IO ()) -> IO ()
 server pnum cproc = do
-    bracket
-	(listenOn $ PortNumber pnum)
-	(sClose)
-	(server2 cproc)
+    initSignal
+    forkIO
+        (bracket
+            (listenOn $ PortNumber pnum)
+            (sClose)
+            (server2 cproc))
+    server1
+
+server1 = do
+    sig <- checkSignal
+    if sig then print "shuting down"
+    else  do
+        threadDelay $ 5*10^6
+        server1
 
 server2 cproc sock = do
     (h,n,p) <- accept sock
-    --putStrLn $ "accepting"
     tid <- forkIO (server3 cproc h)
     server2 cproc sock
 
@@ -71,4 +84,19 @@ client url port cproc = do
     hSetBuffering h NoBuffering
     cproc h
     hClose h
+
+------------------------
+-- SIGNAL STUF
+------------------------
+zsignal :: IORef Bool
+zsignal = unsafePerformIO $ newIORef (False)
+
+gotSignal :: IO ()
+gotSignal = writeIORef zsignal True
+
+initSignal :: IO Handler
+initSignal = installHandler sigINT (Catch gotSignal) Nothing
+
+checkSignal :: IO Bool
+checkSignal = readIORef zsignal
 
