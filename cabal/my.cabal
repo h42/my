@@ -13,6 +13,7 @@ library
                    My.Glob
                    My.Hdbm
                    My.Log
+                   My.Net
                    My.Parse
                    My.Rand
                    My.Show

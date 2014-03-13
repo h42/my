@@ -1,7 +1,7 @@
 HSFLAGS = -O -fwarn-name-shadowing -i/home/jerry/haskell/my
 CLG = $(HSFLAGS) --make -threaded -rtsopts # -dynamic
 
-PROGS=netc nets http
+PROGS=netc nets
 
 #%.o : %.hs
 #        ghc -c $(HSFLAGS) -o $@ $<
@@ -13,7 +13,6 @@ all:$(PROGS)
 cgi:cgi.cc
 	g++ cgi.cc -o www/cgi-bin/cgi
 
-http:Net.o
 nets:nets.hs Net.o Net.hi
 netc:netc.hs Net.o Net.hi
 Net.o Net.hi:Net.hs

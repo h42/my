@@ -1,3 +1,4 @@
+{-# LANGUAGE DoAndIfThenElse  #-}
 module My.Net (
     netGet
     ,netGetf
