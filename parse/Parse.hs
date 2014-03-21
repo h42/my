@@ -1,5 +1,6 @@
 module My.Parse (
     Parse(..)
+   ,allP
    ,anyChar
    ,char
    ,count
@@ -67,6 +68,13 @@ digit = Parse $ \st ->
 --
 -- MANY
 --
+allP :: Parse String a -> Parse String [a]
+allP p = Parse $ \st -> allP' p [] st
+allP' p as [] = Right (reverse as,[])
+allP' p as st = case (runParse p st) of
+        Left ls -> Left st
+        Right (x,st') -> allP' p (x:as) st'
+
 many :: Parse String a -> Parse String [a]
 many p = Parse $ \st -> many' p [] st
 many' p as [] = Right (reverse as,[])

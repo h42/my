@@ -9,7 +9,7 @@ CLG = $(HSFLAGS) --make -dynamic # -threaded -rtsopts # -dynamic
 
 MODULE=Parse
 TESTPROG=
-PROGS=jpd
+PROGS=jpd args
 
 all:$(PROGS)
 

@@ -23,7 +23,7 @@ cs1 = map
  colors
 
 myhtml = do
-    h1' [h_style "color:red"]  $ str "Color Test Program"
+    h1' [c_style "color:red"]  "Color Test Program"
 
     table $ mapM_ (tr . str) cs1
 

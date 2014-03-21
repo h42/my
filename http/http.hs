@@ -16,8 +16,17 @@ import System.Process
 import My.Log
 import My.Net
 import My.Parse
+import My.Demon
+
+lockfn = "http.lcf"
 
 main = do
+    args <- getArgs
+    case args of
+        ("stop" : _) -> killDemon lockfn
+        _            -> demonize main2 lockfn
+
+main2 = do
     rc <- tryIOError (openLog "temp.log")
     case rc of
         Left e -> putStrLn $ show e

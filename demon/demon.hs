@@ -20,7 +20,4 @@ main = do
     args <- getArgs
     case args of
 	("stop":xs) -> killDemon lockfn
-	_           -> main2
-
-main2 = do
-    demonize mydemon lockfn
+        _           -> demonize mydemon lockfn
